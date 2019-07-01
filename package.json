@@ -1,0 +1,44 @@
+{
+  "name": "pttwww",
+  "version": "3.0.0",
+  "description": "Improvement of 'PTT Web BBS'",
+  "main": "gulpfile.js",
+  "dependencies": {},
+  "devDependencies": {
+    "autoprefixer": "^9.6.0",
+    "css-declaration-sorter": "^4.0.1",
+    "gulp": "^4.0.2",
+    "gulp-better-rollup": "^4.0.1",
+    "gulp-cached": "^1.1.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-inject-string": "^1.1.2",
+    "gulp-postcss": "^8.0.0",
+    "gulp-tslint": "^8.1.4",
+    "rollup": "^1.16.3",
+    "rollup-plugin-typescript": "^1.0.1",
+    "streamqueue": "^1.1.2",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.2"
+  },
+  "scripts": {
+    "build": "gulp build",
+    "lint": "tslint --project . --force"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pTaunium/pttwww.git"
+  },
+  "keywords": [
+    "ptt",
+    "userscript"
+  ],
+  "author": "pTaunium",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pTaunium/pttwww/issues"
+  },
+  "homepage": "https://github.com/pTaunium/pttwww#readme",
+  "browserslist": [
+    "defaults"
+  ]
+}
