@@ -1,5 +1,8 @@
 # PTTwww
 
+[![Version](https://img.shields.io/github/package-json/v/pTaunium/pttwww.svg)](./CHANGELOG.md)
+[![License](https://img.shields.io/github/license/pTaunium/pttwww.svg)](./LICENSE)
+
 改良[PTT網頁版](https://www.ptt.cc/bbs/index.html)的介面與功能
 
 ## 主要功能
