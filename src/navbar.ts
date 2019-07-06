@@ -25,20 +25,20 @@ const mailIcon =
 const sharpIcon =
     '<svg viewBox="0 0 256 256"><path d="M44 84h176M36 172h176M92 40L76 216M180 40l-16 176" stroke-width="24"/></svg>';
 
-let bar: HTMLDivElement;
+let navBar: HTMLDivElement;
 
-export const init = () => {
+export const init = async () => {
     if (!isInArticle && isInBoard) {
-        bar = document.createElement('div');
-        bar.id = 'navigation';
-        bar.className = 'bbs-content';
+        navBar = document.createElement('div');
+        navBar.id = 'navigation';
+        navBar.className = 'bbs-content';
 
         const div = document.createElement('div');
         div.id = 'navigation-container';
-        div.appendChild(bar);
+        div.appendChild(navBar);
         document.body.insertBefore(div, document.getElementById('main-container'));
     } else {
-        bar = document.getElementById('navigation') as HTMLDivElement;
+        navBar = document.getElementById('navigation') as HTMLDivElement;
     }
 
     editBarContent();
@@ -47,89 +47,75 @@ export const init = () => {
 
 const addNavBtns = () => {
     /* button container */
-    const elem = document.createElement('div');
-    elem.className = 'nav-btn-container';
+    const container = document.createElement('div');
+    container.className = 'nav-btn-container';
 
     if (isInManual) {
         /* go up one level */
-        const root = (bar.lastChild as HTMLAnchorElement).href;
-        if (url !== root) {
-            let upUrl = url.replace('/index.html', '');
-            upUrl = upUrl.substr(0, upUrl.lastIndexOf('/')) + '/index.html';
-            elem.appendChild(
-                newNavBtn('返回上層', leftarrowIcon, () => {
-                    window.location.href = upUrl;
-                }),
-            );
+        if (!/man\/[\w-]*\/index/.test(url)) {  // is not root
+            const upUrl = url.replace(/[\w-\.]*(?:\/index)?\.html$/, 'index.html');
+            appendNewBtn(container, '返回上層', leftarrowIcon, () => {
+                window.location.href = upUrl;
+            });
         }
     }
 
     if (isInArticle) {
         /* copy title and url */
-        elem.appendChild(
-            newNavBtn('複製文章標題/網址', copyIcon, (e: MouseEvent) => {
-                const metatag = document.querySelector('meta[property="og:title"]');
-                const parent = (e.target as HTMLDivElement).parentElement;
-                let text = url;
-                if (metatag) {
-                    const title = metatag.getAttribute('content');
-                    text = title + '\n' + text;
-                }
-                utils.copyToClipboard(text, parent);
-            }),
-        );
+        appendNewBtn(container, '複製文章標題/網址', copyIcon, () => {
+            const metatag = document.querySelector('meta[property="og:title"]');
+            let text = url;
+            if (metatag) {
+                const title = metatag.getAttribute('content');
+                text = title + '\n' + text;
+            }
+            utils.copyToClipboard(text, container);
+        });
 
         /* AID Menu */
         const aidMenu = new AIDMenu();
-        elem.appendChild(
-            newNavBtn('文章代碼(AID)', sharpIcon, () => {
-                aidMenu.show();
-            }),
-        );
+        appendNewBtn(container, '文章代碼(AID)', sharpIcon, () => {
+            aidMenu.show();
+        });
 
         /* plain text mode */
-        elem.appendChild(
-            newNavBtn('開/關燈', bulbIcon, () => {
-                document.getElementById('main-content').classList.toggle('plain-mode');
-            }),
-        );
+        appendNewBtn(container, '開/關燈', bulbIcon, () => {
+            document.getElementById('main-content').classList.toggle('plain-mode');
+        });
     }
 
     /* setting menu */
     const settingMenu = new SettingsMenu();
-    elem.appendChild(
-        newNavBtn('設定', gearIcon, () => {
-            settingMenu.show();
-        }),
-    );
+    appendNewBtn(container, '設定', gearIcon, () => {
+        settingMenu.show();
+    });
 
     /* contact page */
-    elem.appendChild(
-        newNavBtn('聯絡批踢踢實業坊', mailIcon, () => {
-            window.open('/contact.html');
-        }),
-    );
+    appendNewBtn(container, '聯絡批踢踢實業坊', mailIcon, () => {
+        window.open('/contact.html');
+    });
 
     /* about page */
-    elem.appendChild(
-        newNavBtn('關於批踢踢實業坊', aboutIcon, () => {
-            window.open('/about.html');
-        }),
-    );
+    appendNewBtn(container, '關於批踢踢實業坊', aboutIcon, () => {
+        window.open('/about.html');
+    });
 
-    bar.appendChild(elem);
+    navBar.appendChild(container);
 };
 
 const editBarContent = () => {
     const topbar = document.getElementById('topbar');
 
-    bar.innerHTML = ''; // Empty navigation
-    bar.appendChild(topbar.firstElementChild); // logo
-    bar.appendChild(topbar.firstElementChild); // >
-    bar.appendChild(topbar.firstElementChild); // board name
+    while (navBar.firstChild) {  // Empty the navigation bar
+        navBar.firstChild.remove();
+    }
+    navBar.appendChild(topbar.firstElementChild); // logo
+    navBar.appendChild(topbar.firstElementChild); // >
+    navBar.appendChild(topbar.firstElementChild); // board name
 };
 
-const newNavBtn = (
+const appendNewBtn = (
+    container: HTMLDivElement,
     title: string,
     icon: string,
     clickEvent: (this: HTMLDivElement, ev: MouseEvent) => any,
@@ -139,5 +125,6 @@ const newNavBtn = (
     btn.title = title;
     btn.innerHTML = icon;
     btn.addEventListener('click', clickEvent, false);
-    return btn;
+
+    container.appendChild(btn);
 };

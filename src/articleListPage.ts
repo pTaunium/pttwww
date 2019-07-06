@@ -6,15 +6,15 @@
 
 import { boardName, url } from './constants';
 
-let container: HTMLDivElement;
+let listContainer: HTMLDivElement;
 let topPage = 0;
 let bottomPage = 0;
 
 export const init = async () => {
-    container = document.getElementsByClassName('r-list-container')[0] as HTMLDivElement;
-    if (!container) { return; }
+    listContainer = document.getElementsByClassName('r-list-container')[0] as HTMLDivElement;
+    if (!listContainer) { return; }
 
-    moveSearchBar();
+    await moveSearchBar();
 
     const pages = url.match(/index(\d*)\.html(?:#(\d+)\.\.(\d+))?/);
     if (pages[1] && pages[1] !== '0') {
@@ -31,7 +31,7 @@ export const init = async () => {
     let topLoading = false;
     topDiv.className = 'r-ent-top';
     topDiv.textContent = 'Loading...';
-    container.insertBefore(topDiv, container.firstChild);
+    listContainer.insertBefore(topDiv, listContainer.firstChild);
     window.scrollBy(0, topDiv.clientHeight);
     new IntersectionObserver(async ([entry], self) => {
         if (entry.isIntersecting && !topLoading) {
@@ -40,7 +40,7 @@ export const init = async () => {
             if (list) {
                 const listHeight = document.getElementsByClassName('r-ent')[0].clientHeight;
                 const listLength = list.children.length;
-                container.insertBefore(list, topDiv.nextSibling);
+                listContainer.insertBefore(list, topDiv.nextSibling);
                 topPage -= 1;
                 updateHistory();
                 window.scrollBy(0, listHeight * listLength);
@@ -56,13 +56,13 @@ export const init = async () => {
     let bottomLoading = false;
     bottomDiv.className = 'r-ent-bottom';
     bottomDiv.textContent = 'Loading...';
-    container.appendChild(bottomDiv);
+    listContainer.appendChild(bottomDiv);
     new IntersectionObserver(async ([entry], self) => {
         if (entry.isIntersecting && !bottomLoading) {
             bottomLoading = true;
             const list = await getList(bottomPage + 1);
             if (list) {
-                container.insertBefore(list, bottomDiv);
+                listContainer.insertBefore(list, bottomDiv);
                 bottomPage += 1;
                 updateHistory();
             } else {
@@ -73,7 +73,7 @@ export const init = async () => {
         }
     }).observe(bottomDiv);
 
-    container.addEventListener('click', (e: MouseEvent) => {
+    listContainer.addEventListener('click', (e: MouseEvent) => {
         const target = e.target as HTMLDivElement;
         if (target.className === 'trigger') {
             const isShown = target.parentElement.classList.contains('shown');
@@ -88,7 +88,7 @@ export const init = async () => {
     });
 };
 
-export const moveSearchBar = () => {
+export const moveSearchBar = async () => {
     document
         .getElementsByClassName('action-bar')[0]
         .appendChild(document.getElementsByClassName('search-bar')[0]);
@@ -96,14 +96,16 @@ export const moveSearchBar = () => {
 
 const load = async (page = 1, reload = true) => {
     if (reload) {
-        container.innerHTML = '';
+        while (listContainer.firstChild) {  // Empty the list
+            listContainer.firstChild.remove();
+        }
         let list = await getList(page);
         if (!list) {
             const anch = document.getElementsByClassName('btn wide')[1] as HTMLAnchorElement;
             page = parseInt(anch.href.match(/(\d+)\.html/)[1], 10);
             list = await getList(page);
         }
-        container.appendChild(list);
+        listContainer.appendChild(list);
     }
     topPage = page;
     bottomPage = page;

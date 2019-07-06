@@ -13,14 +13,14 @@ let arrowCount = 0;
 let booCount = 0;
 let isCounterInaccurate = false;
 let highlightedID = '';
-let content: HTMLDivElement;
+let mainContent: HTMLDivElement;
 
-export const init = () => {
-    content = document.getElementById('main-content') as HTMLDivElement;
-    content.innerHTML = content.innerHTML.replace(
+export const init = async () => {
+    mainContent = document.getElementById('main-content') as HTMLDivElement;
+    mainContent.innerHTML = mainContent.innerHTML.replace(
         /(<span class="(f1 )?hl)(.*class="f3 b1 hl)(".*class="f3)(".*span>)([\d/.: ]*\n)/g,
         '<div class="push">$1 push-tag$3 push-userid$4 push-content$5<span class="push-ipdatetime">$6</span></div>',
-    );
+    );  // AutoGiveP 紅底標記推文
 
     addOriPoCSS();
     pushCounterMain();
@@ -46,7 +46,7 @@ export const init = () => {
         new MutationObserver(([mutation], self) => {
             const target = mutation.target as HTMLDivElement;
             if (target.textContent === '推文會自動更新，並會自動捲動') {
-                contentObserver.observe(content, {
+                contentObserver.observe(mainContent, {
                     childList: true,
                 });
             } else {
@@ -61,8 +61,8 @@ export const init = () => {
     }
 };
 
-const pushCounterMain = () => {
-    for (const node of content.children as HTMLCollectionOf<HTMLDivElement>) {
+const pushCounterMain = async () => {
+    for (const node of mainContent.children as HTMLCollectionOf<HTMLDivElement>) {
         if (node.textContent.startsWith('※ 發信站:')) {
             resetPushCounter();
         } else if (node.className === 'push') {
@@ -81,17 +81,17 @@ const pushCounterMain = () => {
             if (userId === highlightedID) {
                 return;
             }
-            content.classList.add('push-highlight-mode');
-            for (const node of content.getElementsByClassName(`push-userid-${highlightedID}`)) {
+            mainContent.classList.add('push-highlight-mode');
+            for (const node of mainContent.getElementsByClassName(`push-userid-${highlightedID}`)) {
                 node.classList.remove('push-highlighted');
             }
-            for (const node of content.getElementsByClassName(`push-userid-${userId}`)) {
+            for (const node of mainContent.getElementsByClassName(`push-userid-${userId}`)) {
                 node.classList.add('push-highlighted');
             }
             highlightedID = userId;
         } else if (highlightedID) {
-            content.classList.remove('push-highlight-mode');
-            for (const node of content.getElementsByClassName(`push-userid-${highlightedID}`)) {
+            mainContent.classList.remove('push-highlight-mode');
+            for (const node of mainContent.getElementsByClassName(`push-userid-${highlightedID}`)) {
                 node.classList.remove('push-highlighted');
             }
             highlightedID = '';
@@ -99,7 +99,7 @@ const pushCounterMain = () => {
     });
 };
 
-const addOriPoCSS = () => {
+const addOriPoCSS = async () => {
     const amv = document.getElementsByClassName('article-meta-value')[0];
     if (amv) {
         const oriPoster = amv.textContent.match(/[\w\d]+/)[0];

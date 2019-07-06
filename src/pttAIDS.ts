@@ -104,7 +104,7 @@ export class AIDMenu extends Popup {
             }
 
             submitBtn.disabled = false;
-            if (/^#[0-9A-Za-z-_]{8}$/.test(aid)) {
+            if (/^#[\w-]{8}$/.test(aid)) {
                 aidInput.classList.remove('error');
                 this.data.aid = aid;
             } else {
@@ -112,7 +112,7 @@ export class AIDMenu extends Popup {
                 submitBtn.disabled = true;
             }
 
-            if (/^[0-9A-Za-z-_]{2,12}$/.test(bname)) {
+            if (/^[\w-]{2,12}$/.test(bname)) {
                 boardNameInput.classList.remove('error');
                 this.data.boardName = bname;
             } else {

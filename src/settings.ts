@@ -23,10 +23,10 @@ const defaultSettings: ISettings = {
 
 const id = 'PTTwwwUserSettings';
 const userSettings = defaultSettings;
-let style: HTMLStyleElement;
+let settingsStyle: HTMLStyleElement;
 
 export const init = () => {
-    style = utils.injectStyles('');
+    settingsStyle = utils.injectStyles('');
 
     const settings = localStorage.getItem(id);
     if (settings) {
@@ -37,33 +37,33 @@ export const init = () => {
 const apply = (settings: ISettings) => {
     Object.assign(userSettings, settings);
 
-    let styleRule = '';
+    let rules = '';
     if (parseInt(userSettings.fontSize, 10) > 0) {
-        styleRule += `--font-size:${userSettings.fontSize}px;`;
+        rules += `--font-size:${userSettings.fontSize}px;`;
     }
     if (userSettings.fontFamily) {
-        styleRule += `--fm-mono:${userSettings.fontFamily};`;
+        rules += `--fm-mono:${userSettings.fontFamily};`;
     }
-    styleRule = `:root{${styleRule}}`;
+    rules = `:root{${rules}}`;
 
     if (userSettings.idBlacklist) {
         let list = '';
         switch (userSettings.idBlacklistType) {
             case 'fade':
                 list = userSettings.idBlacklist.replace(/ *, */g, ',.push-userid-');
-                styleRule += `.push-userid-${list}{opacity:.25}\n`;
+                rules += `.push-userid-${list}{opacity:.25}`;
                 break;
             case 'mute':
                 list = userSettings.idBlacklist.replace(/ *, */g, ' .push-content,.push-userid-');
-                styleRule += `.push-userid-${list} .push-content{display:none}\n`;
+                rules += `.push-userid-${list} .push-content{display:none}`;
                 break;
             case 'hide':
                 list = userSettings.idBlacklist.replace(/ *, */g, ',.push-userid-');
-                styleRule += `.push-userid-${list}{display:none}\n`;
+                rules += `.push-userid-${list}{display:none}`;
                 break;
         }
     }
-    style.innerHTML = styleRule;
+    settingsStyle.innerHTML = rules;
 };
 
 const save = () => {
