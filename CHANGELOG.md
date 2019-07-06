@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](../../compare/v3.0.0..HEAD)
+## [Unreleased](../../compare/v3.0.1..HEAD)
+
+## [v3.0.1](../../compare/v3.0.0..v3.0.1) - 2019/07/06
+
+* Minor improvement
 
 ## v3.0.0 - 2019/07/01
 

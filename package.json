@@ -1,6 +1,6 @@
 {
   "name": "pttwww",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Improvement of 'PTT Web BBS'",
   "main": "gulpfile.js",
   "dependencies": {},
