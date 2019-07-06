@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         PTTwww
-// @version      3.0.0
+// @version      3.0.1
 // @namespace    https://github.com/pTaunium/
 // @description  改良PTT網頁版的介面與功能
 // @author       pTaunium
@@ -561,15 +561,15 @@ const isInManual = /man\/[\w-]+\//.test(url);
 const isInSearchResult = /bbs\/[\w-]+\/search/.test(url);
 const boardName = isInBoard && url.split('/')[4];
 
-let container;
+let listContainer;
 let topPage = 0;
 let bottomPage = 0;
 const init = async () => {
-    container = document.getElementsByClassName('r-list-container')[0];
-    if (!container) {
+    listContainer = document.getElementsByClassName('r-list-container')[0];
+    if (!listContainer) {
         return;
     }
-    moveSearchBar();
+    await moveSearchBar();
     const pages = url.match(/index(\d*)\.html(?:#(\d+)\.\.(\d+))?/);
     if (pages[1] && pages[1] !== '0') {
         await load(+pages[1], false);
@@ -584,7 +584,7 @@ const init = async () => {
     let topLoading = false;
     topDiv.className = 'r-ent-top';
     topDiv.textContent = 'Loading...';
-    container.insertBefore(topDiv, container.firstChild);
+    listContainer.insertBefore(topDiv, listContainer.firstChild);
     window.scrollBy(0, topDiv.clientHeight);
     new IntersectionObserver(async ([entry], self) => {
         if (entry.isIntersecting && !topLoading) {
@@ -593,7 +593,7 @@ const init = async () => {
             if (list) {
                 const listHeight = document.getElementsByClassName('r-ent')[0].clientHeight;
                 const listLength = list.children.length;
-                container.insertBefore(list, topDiv.nextSibling);
+                listContainer.insertBefore(list, topDiv.nextSibling);
                 topPage -= 1;
                 updateHistory();
                 window.scrollBy(0, listHeight * listLength);
@@ -608,13 +608,13 @@ const init = async () => {
     let bottomLoading = false;
     bottomDiv.className = 'r-ent-bottom';
     bottomDiv.textContent = 'Loading...';
-    container.appendChild(bottomDiv);
+    listContainer.appendChild(bottomDiv);
     new IntersectionObserver(async ([entry], self) => {
         if (entry.isIntersecting && !bottomLoading) {
             bottomLoading = true;
             const list = await getList(bottomPage + 1);
             if (list) {
-                container.insertBefore(list, bottomDiv);
+                listContainer.insertBefore(list, bottomDiv);
                 bottomPage += 1;
                 updateHistory();
             } else {
@@ -624,7 +624,7 @@ const init = async () => {
             bottomLoading = false;
         }
     }).observe(bottomDiv);
-    container.addEventListener('click', (e) => {
+    listContainer.addEventListener('click', (e) => {
         const target = e.target;
         if (target.className === 'trigger') {
             const isShown = target.parentElement.classList.contains('shown');
@@ -638,21 +638,23 @@ const init = async () => {
         }
     });
 };
-const moveSearchBar = () => {
+const moveSearchBar = async () => {
     document
         .getElementsByClassName('action-bar')[0]
         .appendChild(document.getElementsByClassName('search-bar')[0]);
 };
 const load = async (page = 1, reload = true) => {
     if (reload) {
-        container.innerHTML = '';
+        while (listContainer.firstChild) {
+            listContainer.firstChild.remove();
+        }
         let list = await getList(page);
         if (!list) {
             const anch = document.getElementsByClassName('btn wide')[1];
             page = parseInt(anch.href.match(/(\d+)\.html/)[1], 10);
             list = await getList(page);
         }
-        container.appendChild(list);
+        listContainer.appendChild(list);
     }
     topPage = page;
     bottomPage = page;
@@ -718,10 +720,10 @@ let arrowCount = 0;
 let booCount = 0;
 let isCounterInaccurate = false;
 let highlightedID = '';
-let content;
-const init$1 = () => {
-    content = document.getElementById('main-content');
-    content.innerHTML = content.innerHTML.replace(/(<span class="(f1 )?hl)(.*class="f3 b1 hl)(".*class="f3)(".*span>)([\d/.: ]*\n)/g, '<div class="push">$1 push-tag$3 push-userid$4 push-content$5<span class="push-ipdatetime">$6</span></div>');
+let mainContent;
+const init$1 = async () => {
+    mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = mainContent.innerHTML.replace(/(<span class="(f1 )?hl)(.*class="f3 b1 hl)(".*class="f3)(".*span>)([\d/.: ]*\n)/g, '<div class="push">$1 push-tag$3 push-userid$4 push-content$5<span class="push-ipdatetime">$6</span></div>');
     addOriPoCSS();
     pushCounterMain();
     const contentObserver = new MutationObserver(([mutation]) => {
@@ -743,7 +745,7 @@ const init$1 = () => {
         new MutationObserver(([mutation], self) => {
             const target = mutation.target;
             if (target.textContent === '推文會自動更新，並會自動捲動') {
-                contentObserver.observe(content, {
+                contentObserver.observe(mainContent, {
                     childList: true,
                 });
             } else {
@@ -757,8 +759,8 @@ const init$1 = () => {
         });
     }
 };
-const pushCounterMain = () => {
-    for (const node of content.children) {
+const pushCounterMain = async () => {
+    for (const node of mainContent.children) {
         if (node.textContent.startsWith('※ 發信站:')) {
             resetPushCounter();
         } else if (node.className === 'push') {
@@ -776,24 +778,24 @@ const pushCounterMain = () => {
             if (userId === highlightedID) {
                 return;
             }
-            content.classList.add('push-highlight-mode');
-            for (const node of content.getElementsByClassName(`push-userid-${highlightedID}`)) {
+            mainContent.classList.add('push-highlight-mode');
+            for (const node of mainContent.getElementsByClassName(`push-userid-${highlightedID}`)) {
                 node.classList.remove('push-highlighted');
             }
-            for (const node of content.getElementsByClassName(`push-userid-${userId}`)) {
+            for (const node of mainContent.getElementsByClassName(`push-userid-${userId}`)) {
                 node.classList.add('push-highlighted');
             }
             highlightedID = userId;
         } else if (highlightedID) {
-            content.classList.remove('push-highlight-mode');
-            for (const node of content.getElementsByClassName(`push-userid-${highlightedID}`)) {
+            mainContent.classList.remove('push-highlight-mode');
+            for (const node of mainContent.getElementsByClassName(`push-userid-${highlightedID}`)) {
                 node.classList.remove('push-highlighted');
             }
             highlightedID = '';
         }
     });
 };
-const addOriPoCSS = () => {
+const addOriPoCSS = async () => {
     const amv = document.getElementsByClassName('article-meta-value')[0];
     if (amv) {
         const oriPoster = amv.textContent.match(/[\w\d]+/)[0];
@@ -949,14 +951,14 @@ class AIDMenu extends Popup {
                 aidInput.value = aid;
             }
             submitBtn.disabled = false;
-            if (/^#[0-9A-Za-z-_]{8}$/.test(aid)) {
+            if (/^#[\w-]{8}$/.test(aid)) {
                 aidInput.classList.remove('error');
                 this.data.aid = aid;
             } else {
                 aidInput.classList.add('error');
                 submitBtn.disabled = true;
             }
-            if (/^[0-9A-Za-z-_]{2,12}$/.test(bname)) {
+            if (/^[\w-]{2,12}$/.test(bname)) {
                 boardNameInput.classList.remove('error');
                 this.data.boardName = bname;
             } else {
@@ -994,9 +996,9 @@ const defaultSettings = {
 };
 const id = 'PTTwwwUserSettings';
 const userSettings = defaultSettings;
-let style;
+let settingsStyle;
 const init$2 = () => {
-    style = injectStyles('');
+    settingsStyle = injectStyles('');
     const settings = localStorage.getItem(id);
     if (settings) {
         apply(JSON.parse(settings));
@@ -1004,32 +1006,32 @@ const init$2 = () => {
 };
 const apply = (settings) => {
     Object.assign(userSettings, settings);
-    let styleRule = '';
+    let rules = '';
     if (parseInt(userSettings.fontSize, 10) > 0) {
-        styleRule += `--font-size:${userSettings.fontSize}px;`;
+        rules += `--font-size:${userSettings.fontSize}px;`;
     }
     if (userSettings.fontFamily) {
-        styleRule += `--fm-mono:${userSettings.fontFamily};`;
+        rules += `--fm-mono:${userSettings.fontFamily};`;
     }
-    styleRule = `:root{${styleRule}}`;
+    rules = `:root{${rules}}`;
     if (userSettings.idBlacklist) {
         let list = '';
         switch (userSettings.idBlacklistType) {
             case 'fade':
                 list = userSettings.idBlacklist.replace(/ *, */g, ',.push-userid-');
-                styleRule += `.push-userid-${list}{opacity:.25}\n`;
+                rules += `.push-userid-${list}{opacity:.25}`;
                 break;
             case 'mute':
                 list = userSettings.idBlacklist.replace(/ *, */g, ' .push-content,.push-userid-');
-                styleRule += `.push-userid-${list} .push-content{display:none}\n`;
+                rules += `.push-userid-${list} .push-content{display:none}`;
                 break;
             case 'hide':
                 list = userSettings.idBlacklist.replace(/ *, */g, ',.push-userid-');
-                styleRule += `.push-userid-${list}{display:none}\n`;
+                rules += `.push-userid-${list}{display:none}`;
                 break;
         }
     }
-    style.innerHTML = styleRule;
+    settingsStyle.innerHTML = rules;
 };
 const save = () => {
     localStorage.setItem(id, JSON.stringify(userSettings));
@@ -1113,80 +1115,79 @@ const gearIcon = '<svg viewBox="0 0 256 256"><path d="M32 138v-20l25.8-6a72 72 0
 const leftarrowIcon = '<svg viewBox="0 0 256 256"><path d="M36 128h184M36 128l92-92M36 128l92 92" stroke-width="24"/></svg>';
 const mailIcon = '<svg viewBox="0 0 256 256"><path d="M28 58h200v140H28V58l88 66q12 9 24 0l88-66" fill="none"/></svg>';
 const sharpIcon = '<svg viewBox="0 0 256 256"><path d="M44 84h176M36 172h176M92 40L76 216M180 40l-16 176" stroke-width="24"/></svg>';
-let bar;
-const init$3 = () => {
+let navBar;
+const init$3 = async () => {
     if (!isInArticle && isInBoard) {
-        bar = document.createElement('div');
-        bar.id = 'navigation';
-        bar.className = 'bbs-content';
+        navBar = document.createElement('div');
+        navBar.id = 'navigation';
+        navBar.className = 'bbs-content';
         const div = document.createElement('div');
         div.id = 'navigation-container';
-        div.appendChild(bar);
+        div.appendChild(navBar);
         document.body.insertBefore(div, document.getElementById('main-container'));
     } else {
-        bar = document.getElementById('navigation');
+        navBar = document.getElementById('navigation');
     }
     editBarContent();
     addNavBtns();
 };
 const addNavBtns = () => {
-    const elem = document.createElement('div');
-    elem.className = 'nav-btn-container';
+    const container = document.createElement('div');
+    container.className = 'nav-btn-container';
     if (isInManual) {
-        const root = bar.lastChild.href;
-        if (url !== root) {
-            let upUrl = url.replace('/index.html', '');
-            upUrl = upUrl.substr(0, upUrl.lastIndexOf('/')) + '/index.html';
-            elem.appendChild(newNavBtn('返回上層', leftarrowIcon, () => {
+        if (!/man\/[\w-]*\/index/.test(url)) {
+            const upUrl = url.replace(/[\w-\.]*(?:\/index)?\.html$/, 'index.html');
+            appendNewBtn(container, '返回上層', leftarrowIcon, () => {
                 window.location.href = upUrl;
-            }));
+            });
         }
     }
     if (isInArticle) {
-        elem.appendChild(newNavBtn('複製文章標題/網址', copyIcon, (e) => {
+        appendNewBtn(container, '複製文章標題/網址', copyIcon, () => {
             const metatag = document.querySelector('meta[property="og:title"]');
-            const parent = e.target.parentElement;
             let text = url;
             if (metatag) {
                 const title = metatag.getAttribute('content');
                 text = title + '\n' + text;
             }
-            copyToClipboard(text, parent);
-        }));
+            copyToClipboard(text, container);
+        });
         const aidMenu = new AIDMenu();
-        elem.appendChild(newNavBtn('文章代碼(AID)', sharpIcon, () => {
+        appendNewBtn(container, '文章代碼(AID)', sharpIcon, () => {
             aidMenu.show();
-        }));
-        elem.appendChild(newNavBtn('開/關燈', bulbIcon, () => {
+        });
+        appendNewBtn(container, '開/關燈', bulbIcon, () => {
             document.getElementById('main-content').classList.toggle('plain-mode');
-        }));
+        });
     }
     const settingMenu = new SettingsMenu();
-    elem.appendChild(newNavBtn('設定', gearIcon, () => {
+    appendNewBtn(container, '設定', gearIcon, () => {
         settingMenu.show();
-    }));
-    elem.appendChild(newNavBtn('聯絡批踢踢實業坊', mailIcon, () => {
+    });
+    appendNewBtn(container, '聯絡批踢踢實業坊', mailIcon, () => {
         window.open('/contact.html');
-    }));
-    elem.appendChild(newNavBtn('關於批踢踢實業坊', aboutIcon, () => {
+    });
+    appendNewBtn(container, '關於批踢踢實業坊', aboutIcon, () => {
         window.open('/about.html');
-    }));
-    bar.appendChild(elem);
+    });
+    navBar.appendChild(container);
 };
 const editBarContent = () => {
     const topbar = document.getElementById('topbar');
-    bar.innerHTML = '';
-    bar.appendChild(topbar.firstElementChild);
-    bar.appendChild(topbar.firstElementChild);
-    bar.appendChild(topbar.firstElementChild);
+    while (navBar.firstChild) {
+        navBar.firstChild.remove();
+    }
+    navBar.appendChild(topbar.firstElementChild);
+    navBar.appendChild(topbar.firstElementChild);
+    navBar.appendChild(topbar.firstElementChild);
 };
-const newNavBtn = (title, icon, clickEvent) => {
+const appendNewBtn = (container, title, icon, clickEvent) => {
     const btn = document.createElement('div');
     btn.className = 'nav-btn';
     btn.title = title;
     btn.innerHTML = icon;
     btn.addEventListener('click', clickEvent, false);
-    return btn;
+    container.appendChild(btn);
 };
 
 const main = () => {

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         PTTwww
-// @version      3.0.0
+// @version      3.0.1
 // @namespace    https://github.com/pTaunium/
 // @description  改良PTT網頁版的介面與功能
 // @author       pTaunium
