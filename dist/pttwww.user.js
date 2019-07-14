@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         PTTwww
-// @version      3.0.1
+// @version      3.1.0
 // @namespace    https://github.com/pTaunium/
 // @description  改良PTT網頁版的介面與功能
 // @author       pTaunium
@@ -125,16 +125,39 @@ img {
   right: 0;
 }
 #navigation .nav-btn {
-  display: inline-block;
+  display: inline-flex;
+  position: relative;
+  justify-content: center;
   width: 1.3em;
   height: 1.3em;
   margin: .1em;
   border-radius: .2em;
   cursor: pointer;
 }
+#navigation .nav-btn::before {
+  visibility: hidden;
+  position: absolute;
+  top: -70%;
+  padding: .5em;
+  border-radius: .5em;
+  background-color:#fff;
+  color: #000;
+  font-size: .5em;
+  white-space: nowrap;
+  content: attr(data-tooltip);
+  opacity: 0;
+  transition-duration: 0;
+}
 #navigation .nav-btn:hover {
   background-color: #eee;
   box-shadow: .05em .05em .05em #888;
+}
+#navigation .nav-btn:hover::before {
+  visibility: visible;
+  top: -120%;
+  opacity: 1;
+  transition-delay: .25s;
+  transition-duration: .5s;
 }
 #navigation .nav-btn:active {
   background-color: #eee;
@@ -147,6 +170,7 @@ img {
   stroke-linecap: round;
   stroke-linejoin: round;
   position: relative;
+  height: 100%;
 }
 #navigation .nav-btn:active svg {
   top: .025em;
@@ -228,7 +252,6 @@ img {
   background-color: rgba(0,0,0,.75);
 }
 .btn-group {
-  display: -webkit-box;
   display: flex;
   font-size: var(--font-size);
 }
@@ -258,7 +281,6 @@ img {
   width: 10em;
   height: 2.4em;
   padding: 0 .5em;
-  -webkit-transition: width .4s;
   transition: width .4s;
 }
 .search-bar .query:focus {
@@ -354,7 +376,6 @@ img {
   height: 0;
   overflow: hidden;
   line-height: 1;
-  -webkit-transition: height .2s;
   transition: height .2s;
 }
 .article-menu.shown .item {
@@ -479,31 +500,30 @@ a:hover .hl { color: inherit; }
   color: #000;
 }
 .pttwww-popup-overlay {
+  display: flex;
+  visibility: visible;
   z-index: 999;
-  position: fixed;
+  position: absolute;
   top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  width: 100%;
+  min-height: 100%;
   background-color: rgba(0,0,0,.875);
   opacity: 1;
-  -webkit-transition: .4s;
   transition: .4s;
 }
 .pttwww-popup-container {
-  position: absolute;
-  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  -webkit-transform: translateY(-50%);
-          transform: translateY(-50%);
-  -webkit-transition: .4s;
+  margin-top: 0;
   transition: .4s;
 }
 .pttwww-popup-content {
   display: table;
-  margin: 0 auto;
+  margin: 2em auto;
   padding: 1em 2em;
-  border-radius: .25em;
+  border-radius: .5em;
   background-color: #fff;
   font-family: var(--fm-sans);
   font-size: .75em;
@@ -547,11 +567,12 @@ a:hover .hl { color: inherit; }
   border-color: #f00;
 }
 .pttwww-popup-overlay.hide {
-  z-index: -1;
+  visibility: hidden;
+  position: fixed;
   opacity: 0;
 }
 .pttwww-popup-overlay.hide > .pttwww-popup-container {
-  top: 100%;
+  margin-top: 50%;
 }
 `;
 const url = window.location.href;
@@ -875,14 +896,15 @@ class Popup {
         mainContainer.style.top = `${y}px`;
         mainContainer.style.position = 'fixed';
         this.overlay.classList.remove('hide');
+        window.scrollTo(0, 0);
     }
     hide() {
         const mainContainer = document.getElementById('main-container');
         const y = parseFloat(mainContainer.style.top);
         mainContainer.style.position = '';
         mainContainer.style.top = '';
-        window.scrollBy(0, -y);
         this.overlay.classList.add('hide');
+        window.scrollTo(0, -y);
     }
 }
 
@@ -1137,39 +1159,41 @@ const addNavBtns = () => {
     if (isInManual) {
         if (!/man\/[\w-]*\/index/.test(url)) {
             const upUrl = url.replace(/[\w-\.]*(?:\/index)?\.html$/, 'index.html');
-            appendNewBtn(container, '返回上層', leftarrowIcon, () => {
-                window.location.href = upUrl;
-            });
+            appendNewBtn(container, '返回上層', leftarrowIcon, { link: upUrl });
         }
     }
     if (isInArticle) {
-        appendNewBtn(container, '複製文章標題/網址', copyIcon, () => {
-            const metatag = document.querySelector('meta[property="og:title"]');
-            let text = url;
-            if (metatag) {
-                const title = metatag.getAttribute('content');
-                text = title + '\n' + text;
-            }
-            copyToClipboard(text, container);
+        appendNewBtn(container, '複製文章標題/網址', copyIcon, {
+            clickEvent: () => {
+                const metatag = document.querySelector('meta[property="og:title"]');
+                let text = url;
+                if (metatag) {
+                    const title = metatag.getAttribute('content');
+                    text = title + '\n' + text;
+                }
+                copyToClipboard(text, container);
+            },
         });
         const aidMenu = new AIDMenu();
-        appendNewBtn(container, '文章代碼(AID)', sharpIcon, () => {
-            aidMenu.show();
+        appendNewBtn(container, '文章代碼(AID)', sharpIcon, {
+            clickEvent: () => {
+                aidMenu.show();
+            },
         });
-        appendNewBtn(container, '開/關燈', bulbIcon, () => {
-            document.getElementById('main-content').classList.toggle('plain-mode');
+        appendNewBtn(container, '開/關燈', bulbIcon, {
+            clickEvent: () => {
+                document.getElementById('main-content').classList.toggle('plain-mode');
+            },
         });
     }
     const settingMenu = new SettingsMenu();
-    appendNewBtn(container, '設定', gearIcon, () => {
-        settingMenu.show();
+    appendNewBtn(container, '設定', gearIcon, {
+        clickEvent: () => {
+            settingMenu.show();
+        },
     });
-    appendNewBtn(container, '聯絡批踢踢實業坊', mailIcon, () => {
-        window.open('/contact.html');
-    });
-    appendNewBtn(container, '關於批踢踢實業坊', aboutIcon, () => {
-        window.open('/about.html');
-    });
+    appendNewBtn(container, '聯絡批踢踢實業坊', mailIcon, { link: '/contact.html' });
+    appendNewBtn(container, '關於批踢踢實業坊', aboutIcon, { link: '/about.html' });
     navBar.appendChild(container);
 };
 const editBarContent = () => {
@@ -1181,12 +1205,18 @@ const editBarContent = () => {
     navBar.appendChild(topbar.firstElementChild);
     navBar.appendChild(topbar.firstElementChild);
 };
-const appendNewBtn = (container, title, icon, clickEvent) => {
-    const btn = document.createElement('div');
+const appendNewBtn = (container, title, icon, options) => {
+    const btn = document.createElement('a');
     btn.className = 'nav-btn';
-    btn.title = title;
+    btn.dataset.tooltip = title;
     btn.innerHTML = icon;
-    btn.addEventListener('click', clickEvent, false);
+    if (options.hasOwnProperty('link')) {
+        btn.href = options.link;
+        btn.target = '_blank';
+    }
+    if (options.hasOwnProperty('clickEvent')) {
+        btn.addEventListener('click', options.clickEvent, false);
+    }
     container.appendChild(btn);
 };
 
