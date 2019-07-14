@@ -40,6 +40,7 @@ export abstract class Popup {
         mainContainer.style.top = `${y}px`;
         mainContainer.style.position = 'fixed';
         this.overlay.classList.remove('hide');
+        window.scrollTo(0, 0);
     }
 
     public hide() {
@@ -47,8 +48,8 @@ export abstract class Popup {
         const y = parseFloat(mainContainer.style.top);
         mainContainer.style.position = '';
         mainContainer.style.top = '';
-        window.scrollBy(0, -y);
         this.overlay.classList.add('hide');
+        window.scrollTo(0, -y);
     }
 
     protected abstract init(): void; // To be implemented
