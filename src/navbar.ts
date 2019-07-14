@@ -9,6 +9,11 @@ import { AIDMenu } from './pttAIDS';
 import { SettingsMenu } from './settings';
 import * as utils from './utils';
 
+interface IBtnOption {
+    link?: string;
+    clickEvent?: (this: HTMLAnchorElement, ev: MouseEvent) => void;
+}
+
 /* button icons */
 const aboutIcon =
     '<svg viewBox="0 0 256 256"><circle cx="128" cy="128" r="96" fill="none"/><circle cx="128" cy="80" r="16" stroke-width="0"/><path d="M114 108h22v76h12v8h-40v-8h12v-68h-6z"/></svg>';
@@ -54,51 +59,53 @@ const addNavBtns = () => {
         /* go up one level */
         if (!/man\/[\w-]*\/index/.test(url)) {  // is not root
             const upUrl = url.replace(/[\w-\.]*(?:\/index)?\.html$/, 'index.html');
-            appendNewBtn(container, '返回上層', leftarrowIcon, () => {
-                window.location.href = upUrl;
-            });
+            appendNewBtn(container, '返回上層', leftarrowIcon, { link: upUrl });
         }
     }
 
     if (isInArticle) {
         /* copy title and url */
-        appendNewBtn(container, '複製文章標題/網址', copyIcon, () => {
-            const metatag = document.querySelector('meta[property="og:title"]');
-            let text = url;
-            if (metatag) {
-                const title = metatag.getAttribute('content');
-                text = title + '\n' + text;
-            }
-            utils.copyToClipboard(text, container);
+        appendNewBtn(container, '複製文章標題/網址', copyIcon, {
+            clickEvent: () => {
+                const metatag = document.querySelector('meta[property="og:title"]');
+                let text = url;
+                if (metatag) {
+                    const title = metatag.getAttribute('content');
+                    text = title + '\n' + text;
+                }
+                utils.copyToClipboard(text, container);
+            },
         });
 
         /* AID Menu */
         const aidMenu = new AIDMenu();
-        appendNewBtn(container, '文章代碼(AID)', sharpIcon, () => {
-            aidMenu.show();
+        appendNewBtn(container, '文章代碼(AID)', sharpIcon, {
+            clickEvent: () => {
+                aidMenu.show();
+            },
         });
 
         /* plain text mode */
-        appendNewBtn(container, '開/關燈', bulbIcon, () => {
-            document.getElementById('main-content').classList.toggle('plain-mode');
+        appendNewBtn(container, '開/關燈', bulbIcon, {
+            clickEvent: () => {
+                document.getElementById('main-content').classList.toggle('plain-mode');
+            },
         });
     }
 
     /* setting menu */
     const settingMenu = new SettingsMenu();
-    appendNewBtn(container, '設定', gearIcon, () => {
-        settingMenu.show();
+    appendNewBtn(container, '設定', gearIcon, {
+        clickEvent: () => {
+            settingMenu.show();
+        },
     });
 
     /* contact page */
-    appendNewBtn(container, '聯絡批踢踢實業坊', mailIcon, () => {
-        window.open('/contact.html');
-    });
+    appendNewBtn(container, '聯絡批踢踢實業坊', mailIcon, { link: '/contact.html' });
 
     /* about page */
-    appendNewBtn(container, '關於批踢踢實業坊', aboutIcon, () => {
-        window.open('/about.html');
-    });
+    appendNewBtn(container, '關於批踢踢實業坊', aboutIcon, { link: '/about.html' });
 
     navBar.appendChild(container);
 };
@@ -118,13 +125,20 @@ const appendNewBtn = (
     container: HTMLDivElement,
     title: string,
     icon: string,
-    clickEvent: (this: HTMLDivElement, ev: MouseEvent) => any,
+    options: IBtnOption,
 ) => {
-    const btn = document.createElement('div');
+    const btn = document.createElement('a');
     btn.className = 'nav-btn';
     btn.dataset.tooltip = title;
     btn.innerHTML = icon;
-    btn.addEventListener('click', clickEvent, false);
+
+    if (options.hasOwnProperty('link')) {
+        btn.href = options.link;
+        btn.target = '_blank';
+    }
+    if (options.hasOwnProperty('clickEvent')) {
+        btn.addEventListener('click', options.clickEvent, false);
+    }
 
     container.appendChild(btn);
 };

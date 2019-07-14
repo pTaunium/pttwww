@@ -195,6 +195,7 @@ img {
   stroke-linecap: round;
   stroke-linejoin: round;
   position: relative;
+  height: 100%;
 }
 
 #navigation .nav-btn:active svg {
