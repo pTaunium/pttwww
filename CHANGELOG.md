@@ -2,6 +2,8 @@
 
 ## [Unreleased](../../compare/v3.0.1..HEAD)
 
+* Navigation bar 加入 tooltip
+
 ## [v3.0.1](../../compare/v3.0.0..v3.0.1) - 2019/07/06
 
 * Minor improvement

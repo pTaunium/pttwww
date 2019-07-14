@@ -122,7 +122,7 @@ const appendNewBtn = (
 ) => {
     const btn = document.createElement('div');
     btn.className = 'nav-btn';
-    btn.title = title;
+    btn.dataset.tooltip = title;
     btn.innerHTML = icon;
     btn.addEventListener('click', clickEvent, false);
 

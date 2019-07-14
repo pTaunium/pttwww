@@ -145,7 +145,9 @@ img {
 }
 
 #navigation .nav-btn {
-  display: inline-block;
+  display: inline-flex;
+  position: relative;
+  justify-content: center;
   width: 1.3em;
   height: 1.3em;
   margin: .1em;
@@ -153,9 +155,32 @@ img {
   cursor: pointer;
 }
 
+#navigation .nav-btn::before {
+  visibility: hidden;
+  position: absolute;
+  top: -70%;
+  padding: .5em;
+  border-radius: .5em;
+  background-color:#fff;
+  color: #000;
+  font-size: .5em;
+  white-space: nowrap;
+  content: attr(data-tooltip);
+  opacity: 0;
+  transition-duration: 0;
+}
+
 #navigation .nav-btn:hover {
   background-color: #eee;
   box-shadow: .05em .05em .05em #888;
+}
+
+#navigation .nav-btn:hover::before {
+  visibility: visible;
+  top: -120%;
+  opacity: 1;
+  transition-delay: .25s;
+  transition-duration: .5s;
 }
 
 #navigation .nav-btn:active {
