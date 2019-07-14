@@ -1,8 +1,11 @@
 # Changelog
 
-## [Unreleased](../../compare/v3.0.1..HEAD)
+## [Unreleased](../../compare/v3.1.0..HEAD)
+
+## [v3.1.0](../../compare/v3.0.1..v3.1.0) - 2019/07/14
 
 * Navigation bar 加入 tooltip
+* Minor improvement
 
 ## [v3.0.1](../../compare/v3.0.0..v3.0.1) - 2019/07/06
 
